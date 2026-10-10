@@ -9,7 +9,7 @@ view behind an account.
 
 Built as the **B14-A7 "Bazar Dor"** assignment for Programming Hero.
 
-**লাইভ ডেমো:** _add your Vercel URL here_ · **রিপোজিটরি:** _add your repo URL here_
+**লাইভ ডেমো:** <https://bazar.asadpro.com> · **রিপোজিটরি:** <https://github.com/asadProfile/B14-A7-Bazar-Dor-Asad>
 
 ---
 
@@ -114,9 +114,21 @@ opaque configuration error.
 2. Create a free [Turso](https://turso.tech) database and put its URL and token
    in `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` — Vercel's filesystem is
    ephemeral, so the local SQLite file cannot hold sessions there.
-3. Set `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` (the deployed origin).
-4. Deploy, then add the production callback URLs in the Google and GitHub
-   consoles.
+3. Set `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (the deployed origin) and the
+   `GOOGLE_` / `GITHUB_` credentials. Env changes only apply to *new*
+   deployments, so redeploy afterwards.
+4. Register the callbacks. The URI is always
+   `<BETTER_AUTH_URL>/api/auth/callback/<provider>`:
+
+   ```
+   https://bazar.asadpro.com/api/auth/callback/google
+   https://bazar.asadpro.com/api/auth/callback/github
+   ```
+
+   Keep the `http://localhost:3000/...` pair registered as well so local
+   development keeps working. Google accepts many redirect URIs; a classic
+   GitHub **OAuth App** accepts only one, so a second domain needs a second
+   OAuth App or a GitHub **App** (which allows several).
 
 ---
 

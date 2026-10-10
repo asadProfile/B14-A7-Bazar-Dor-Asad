@@ -20,6 +20,7 @@ import * as schema from "./schema";
 
 declare global {
   var __bazardorDb: LibSQLDatabase<typeof schema> | undefined;
+  var __bazardorReady: Promise<void> | undefined;
 }
 
 function resolveUrl(): string {
@@ -112,11 +113,31 @@ function createDb(): LibSQLDatabase<typeof schema> {
   // Cached across hot reloads in dev so we do not re-run DDL on every request.
   if (!globalThis.__bazardorDb) {
     globalThis.__bazardorDb = drizzle(sqlite, { schema });
-    // Fire-and-forget: the DDL is idempotent and awaited lazily by the first query.
-    void migrate(sqlite);
+    // Kicked off at import, but callers await `dbReady()` before querying —
+    // see the note there for why that matters on serverless.
+    globalThis.__bazardorReady = migrate(sqlite).catch((error: unknown) => {
+      // Log instead of rejecting: an unhandled rejection here would take down
+      // the whole invocation with an opaque, empty-bodied 500.
+      console.error("[bazardor] database migration failed:", error);
+    });
   }
   return globalThis.__bazardorDb;
 }
 
 export const db = createDb();
+
+/**
+ * Resolves once the schema is in place. Await this before the first query.
+ *
+ * On serverless hosts the database lives in an ephemeral directory that is
+ * empty at every cold start, so the DDL runs again per instance. Without this
+ * gate the first request of an instance can reach the database while the
+ * `CREATE TABLE` statements are still in flight and fail with "no such table".
+ * Locally the tables already exist, which is why the race never shows up in
+ * development.
+ */
+export function dbReady(): Promise<void> {
+  return globalThis.__bazardorReady ?? Promise.resolve();
+}
+
 export { schema };

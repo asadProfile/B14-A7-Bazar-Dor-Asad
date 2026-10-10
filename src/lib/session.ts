@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { auth } from "./auth";
+import { dbReady } from "./db";
 
 /**
  * Reads the current session inside a Server Component.
@@ -9,6 +10,8 @@ import { auth } from "./auth";
  * should redirect themselves — see `requireSession` below.
  */
 export async function getServerSession() {
+  // The session table must exist before BetterAuth queries it.
+  await dbReady();
   return auth.api.getSession({ headers: await headers() });
 }
 
