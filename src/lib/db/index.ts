@@ -140,4 +140,28 @@ export function dbReady(): Promise<void> {
   return globalThis.__bazardorReady ?? Promise.resolve();
 }
 
+/**
+ * Which database the app resolved to. Deliberately returns a label rather than
+ * the URL so it is safe to expose from the health endpoint.
+ */
+export function dbTarget(): "turso" | "database_url" | "ephemeral-tmp" | "local-file" {
+  if (process.env.TURSO_DATABASE_URL) return "turso";
+  if (process.env.DATABASE_URL) return "database_url";
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return "ephemeral-tmp";
+  }
+  return "local-file";
+}
+
+/**
+ * Confirms the schema is actually usable, and reports how many accounts exist.
+ * Used by `/api/health` to diagnose a deployment without log access.
+ */
+export async function pingDatabase(): Promise<number> {
+  await dbReady();
+  const result = await getClient().execute("SELECT count(*) AS n FROM user");
+  const row = result.rows[0] as Record<string, unknown> | undefined;
+  return Number(row?.["n"] ?? 0);
+}
+
 export { schema };
