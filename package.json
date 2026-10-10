@@ -1,12 +1,14 @@
 {
-  "name": "bazardor-scaffold",
-  "version": "0.1.0",
+  "name": "bazardor",
+  "version": "1.0.0",
   "private": true,
+  "description": "বাজার দর — আজকের পণ্যমূল্য, এক নজরে। A Bengali daily market-price tracker built with Next.js and BetterAuth.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

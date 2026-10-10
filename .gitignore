@@ -46,3 +46,9 @@ next-env.d.ts
 
 # keep the env template tracked
 !.env.example
+
+# design references and dev-only screenshot tooling
+/UI/
+/.shots/
+bazar-hero.png
+logo-icon.png
