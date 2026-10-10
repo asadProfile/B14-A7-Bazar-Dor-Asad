@@ -19,7 +19,6 @@ import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __bazardorDb: LibSQLDatabase<typeof schema> | undefined;
 }
 
