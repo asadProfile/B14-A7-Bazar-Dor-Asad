@@ -25,16 +25,36 @@ export const socialProvidersEnabled = {
   github: Boolean(githubClientId && githubClientSecret),
 } as const;
 
-/** Origins allowed to POST to the auth routes — local dev plus the deployment. */
-function trustedOrigins(): string[] {
-  const origins = ["http://localhost:3000", "http://127.0.0.1:3000"];
+const LOCAL_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+
+/**
+ * Origins allowed to POST to the auth routes.
+ *
+ * Any localhost origin is accepted so that `next dev` picking a fallback port
+ * (`:3001` when `:3000` is taken) or a local `next start` on a custom port does
+ * not fail with a confusing "Invalid origin" error. That is not a CSRF hole:
+ * a remote page cannot present itself as `http://localhost`, and the session
+ * cookie for a deployed domain is never sent to a localhost origin.
+ *
+ * Everything else must be listed explicitly via BETTER_AUTH_URL /
+ * NEXT_PUBLIC_APP_URL, or be the current Vercel deployment's own URL.
+ */
+function trustedOrigins(): string[] | ((request?: Request) => string[]) {
+  const configured = new Set<string>();
   for (const key of ["BETTER_AUTH_URL", "NEXT_PUBLIC_APP_URL"] as const) {
     const value = process.env[key];
-    if (value) origins.push(value.replace(/\/$/, ""));
+    if (value) configured.add(value.replace(/\/$/, ""));
   }
-  // Vercel exposes the generated URL for preview deployments.
-  if (process.env.VERCEL_URL) origins.push(`https://${process.env.VERCEL_URL}`);
-  return origins;
+  // Vercel exposes the auto-generated URL for preview and production deploys.
+  if (process.env.VERCEL_URL) configured.add(`https://${process.env.VERCEL_URL}`);
+
+  const allowed = [...configured];
+
+  return (request?: Request) => {
+    const origin = request?.headers.get("origin");
+    if (origin && LOCAL_ORIGIN_RE.test(origin)) return [...allowed, origin];
+    return allowed;
+  };
 }
 
 export const auth = betterAuth({
@@ -54,6 +74,9 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
     requireEmailVerification: false,
+    // The brief asks for registration to hand the user over to the sign-in
+    // page, so a successful sign-up must not open a session of its own.
+    autoSignIn: false,
   },
   socialProviders: {
     ...(socialProvidersEnabled.google
