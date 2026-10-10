@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ *
+ * BazarDor design tokens
+ * Palette sampled from the Figma reference in UI/*.png.
+ * ------------------------------------------------------------------ */
+@theme {
+  /* Brand green — the logo tile, CTA buttons and active nav pill */
+  --color-brand-50: #eaf7ef;
+  --color-brand-100: #d2f0de;
+  --color-brand-200: #a8e2c2;
+  --color-brand-500: #0a9a4a;
+  --color-brand-600: #05893e;
+  --color-brand-700: #046b31;
+
+  /* Page surfaces */
+  --color-page: #f0f5f0;
+  --color-line: #e6ebe6;
+
+  /* Price movement — a rise costs the buyer more (red), a fall is good (green) */
+  --color-up: #dc2626;
+  --color-up-soft: #fee2e2;
+  --color-down: #16a34a;
+  --color-down-soft: #dcfce7;
+  --color-flat: #9ca3af;
+  --color-flat-soft: #f3f4f6;
+
+  --color-ink: #16211a;
+  --color-muted: #6b7280;
+
+  --font-sans: var(--font-hind-siliguri), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 0.875rem;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Bengali letterforms have tall ascenders and descenders — give them room. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    line-height: 1.4;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card-surface {
+    background-color: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Infinite price ticker under the navbar
+ * ------------------------------------------------------------------ */
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 60s linear infinite;
+}
+
+.ticker-viewport:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------------------ *
+ * Skeleton shimmer
+ * ------------------------------------------------------------------ */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.skeleton {
+  background-color: #e4eae4;
+  border-radius: 0.5rem;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track,
+  .skeleton {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
