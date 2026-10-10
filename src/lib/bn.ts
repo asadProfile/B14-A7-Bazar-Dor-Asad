@@ -132,8 +132,9 @@ export function bnSeason(date: Date = new Date()): string {
  * Aggregates a product's per-market quotes into the min / max / average
  * summary card on the details page.
  *
- * Average is the mean of every market's min **and** max quote, rounded to two
- * decimals, which is what the Figma shows (e.g. `৬৩` for a ৫৯–৭১ spread).
+ * The average is the midpoint of the nationwide low and high — for the Figma's
+ * বাটাম সাইজ চাল that is (৫৯ + ৭৩) / ২ = ৬৬, which is the figure the design
+ * shows. Averaging all 24 individual quotes instead would give ৬৫.৩৩.
  */
 export function priceSummary(product: Product): PriceSummary {
   const markets = product.markets ?? [];
@@ -149,18 +150,16 @@ export function priceSummary(product: Product): PriceSummary {
 
   let lowest = markets[0];
   let highest = markets[0];
-  let total = 0;
 
   for (const m of markets) {
     if (m.min < lowest.min) lowest = m;
     if (m.max > highest.max) highest = m;
-    total += m.min + m.max;
   }
 
   return {
     min: lowest.min,
     max: highest.max,
-    avg: Math.round((total / (markets.length * 2)) * 100) / 100,
+    avg: Math.round(((lowest.min + highest.max) / 2) * 100) / 100,
     minMarket: lowest.market,
     maxMarket: highest.market,
   };
