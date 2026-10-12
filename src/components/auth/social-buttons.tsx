@@ -39,6 +39,33 @@ export function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 type Provider = "google" | "github";
 
+const PROVIDER_LABEL: Record<Provider, string> = {
+  google: "Google",
+  github: "GitHub",
+};
+
+/**
+ * Explains where a missing provider credential has to be added.
+ *
+ * `.env.local` is only the right answer when the page is being served from the
+ * developer's own machine. On a deployed site the variables live in the host's
+ * dashboard — and changing them there does not reach an existing deployment, so
+ * the visitor needs the redeploy step too. Sending everyone to `.env.local` was
+ * actively misleading on production.
+ */
+function missingCredentialsMessage(provider: Provider): string {
+  const vars = `${provider.toUpperCase()}_CLIENT_ID ও ${provider.toUpperCase()}_CLIENT_SECRET`;
+  const label = PROVIDER_LABEL[provider];
+
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
+
+  return isLocalhost
+    ? `${label} লগইন এখনো চালু করা হয়নি — .env.local ফাইলে ${vars} যোগ করে ডেভ সার্ভার আবার চালু করুন।`
+    : `${label} লগইন এখনো চালু করা হয়নি — এই ডিপ্লয়মেন্টে ${vars} সেট করা নেই। হোস্টিং ড্যাশবোর্ডে (Vercel → Settings → Environment Variables) যোগ করে নতুন করে ডিপ্লয় করুন।`;
+}
+
 /**
  * Google / GitHub sign-in buttons.
  *
@@ -59,10 +86,7 @@ export function SocialButtons({
 
   async function signInWith(provider: Provider) {
     if (!enabled[provider]) {
-      toast.error(
-        `${provider === "google" ? "Google" : "GitHub"} লগইন এখনো চালু করা হয়নি — .env.local ফাইলে ${provider.toUpperCase()}_CLIENT_ID ও ${provider.toUpperCase()}_CLIENT_SECRET যোগ করুন।`,
-        { duration: 6000 },
-      );
+      toast.error(missingCredentialsMessage(provider), { duration: 8000 });
       return;
     }
 
