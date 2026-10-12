@@ -105,5 +105,16 @@ export const auth = betterAuth({
   plugins: [nextCookies()],
 });
 
+// BetterAuth builds its context promise eagerly here, but only awaits it on the
+// first auth request. If that initialisation fails — most often a missing
+// BETTER_AUTH_SECRET, which it rejects outright in production — the rejected
+// promise sits with no handler attached until a request finally arrives, and
+// Node reports it as an unhandledRejection, muddying the logs with a second
+// copy of an error we already report through getServerSession and /api/health.
+//
+// Attaching a handler marks it as observed; the rejection itself is untouched,
+// so callers that await `$context` still see it fail exactly as before.
+void auth.$context.catch(() => {});
+
 export type Session = typeof auth.$Infer.Session;
 export type AuthUser = typeof auth.$Infer.Session.user;

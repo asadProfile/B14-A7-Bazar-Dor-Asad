@@ -12,7 +12,18 @@ import { dbReady } from "./db";
 export async function getServerSession() {
   // The session table must exist before BetterAuth queries it.
   await dbReady();
-  return auth.api.getSession({ headers: await headers() });
+
+  try {
+    return await auth.api.getSession({ headers: await headers() });
+  } catch (error) {
+    // A misconfigured or unreachable auth layer must not take the whole page
+    // down. BetterAuth throws outright when BETTER_AUTH_SECRET is unset in
+    // production, which turned /signin and /signup into a bare server-side
+    // exception instead of a sign-in form. Treat the visitor as signed out;
+    // the route then decides what to do, and /api/health reports the cause.
+    console.error("[bazardor] session lookup failed:", error);
+    return null;
+  }
 }
 
 /** Same as `getServerSession`, but the caller must handle the signed-out case. */
